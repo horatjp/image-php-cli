@@ -1,4 +1,4 @@
-FROM php:7.4-cli
+FROM php:8.0-cli
 
 ARG USERNAME=vscode
 ARG USER_UID=1000
@@ -6,7 +6,7 @@ ARG USER_GID=$USER_UID
 
 ENV DEBIAN_FRONTEND noninteractive
 
-COPY --from=composer:2.1 /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2.4.3 /usr/bin/composer /usr/bin/composer
 
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     bash-completion \
@@ -26,6 +26,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     libpng-dev \
     libpq-dev \
     libsqlite3-dev \
+    libwebp-dev \
     libxslt-dev \
     libzip-dev \
     mariadb-client \
@@ -50,9 +51,9 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*
 
-RUN pecl install imagick redis-5.1.1 xdebug-3.1.1 \
+RUN pecl install imagick redis-5.3.4 xdebug-3.1.1 \
     && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-enable imagick redis xdebug \
     && docker-php-ext-install -j$(nproc) \
     bcmath \
