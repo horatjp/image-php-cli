@@ -32,6 +32,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     libxslt-dev \
     libzip-dev \
     mariadb-client \
+    openssh-client \
     postgresql-client \
     rsync \
     sqlite3 \
