@@ -1,4 +1,4 @@
-FROM php:8.2-cli
+FROM php:8.3-cli
 
 ARG USERNAME=vscode
 ARG USER_UID=1000
