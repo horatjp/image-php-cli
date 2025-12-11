@@ -1,26 +1,25 @@
-FROM php:8.3-cli
+FROM php:8.4-cli-trixie
 
 ARG USERNAME=vscode
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
-COPY --from=composer:2.8.1 /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2.9.2 /usr/bin/composer /usr/bin/composer
 
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     bash-completion \
     chromium \
     curl \
     dnsutils \
-    fonts-ipafont \
+    fonts-noto-cjk \
     git \
     imagemagick \
     jq \
     less \
     locales \
-    libc-client-dev \
-    libfreetype6-dev \
+    libfreetype-dev \
     libjpeg62-turbo-dev \
     libkrb5-dev \
     libmagickwand-dev \
@@ -44,6 +43,17 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     yq \
     zip \
     zsh \
+    # Additional tools for development
+    tmux \
+    ripgrep \
+    fd-find \
+    bat \
+    eza \
+    fzf \
+    gh \
+    lazygit \
+    git-delta \
+    btop \
     # user
     && groupadd --gid ${USER_GID} ${USERNAME} \
     && useradd -s /bin/bash --uid ${USER_UID} --gid ${USER_GID} -m ${USERNAME} \
@@ -55,15 +65,13 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*
 
-RUN pecl install imagick mailparse redis-6.1.0 xdebug-3.3.2 \
-    && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
+RUN pecl install imagick mailparse redis-6.3.0 xdebug-3.4.7 \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-enable imagick mailparse redis xdebug \
     && docker-php-ext-install -j$(nproc) \
     bcmath \
     exif \
     gd \
-    imap \
     intl \
     mbstring \
     mysqli \
@@ -79,42 +87,36 @@ RUN pecl install imagick mailparse redis-6.1.0 xdebug-3.3.2 \
 
 COPY config/php.ini /usr/local/etc/php/conf.d/
 
-# Install nvm (Node Version Manager)
-ENV NVM_DIR /home/${USERNAME}/.nvm
-RUN mkdir -p ${NVM_DIR} \
-    && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash \
-    && chown -R ${USERNAME}:${USERNAME} ${NVM_DIR}
+# Remove Chromium desktop entry
+RUN rm -f /usr/share/applications/chromium.desktop
 
-# Install Oh My Zsh and configure it
-RUN su ${USERNAME} -c 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended' \
-    && chsh -s /usr/bin/zsh ${USERNAME}
+# Install Starship prompt (as non-root user)
+RUN su ${USERNAME} -c 'curl -sS https://starship.rs/install.sh | sh -s -- --yes'
 
-# Install useful zsh plugins
-RUN : \
-    && git clone https://github.com/zsh-users/zsh-autosuggestions /home/${USERNAME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions \
-    && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git /home/${USERNAME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting \
-    && git clone https://github.com/zsh-users/zsh-completions /home/${USERNAME}/.oh-my-zsh/custom/plugins/zsh-completions \
-    && chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/.oh-my-zsh/custom/plugins
+# Install Znap (Zsh plugin manager) and pre-install plugins
+RUN su -s /bin/zsh ${USERNAME} -c 'git clone --depth=1 https://github.com/marlonrichert/zsh-snap.git /home/${USERNAME}/.zsh-snap \
+    && source /home/${USERNAME}/.zsh-snap/znap.zsh \
+    && znap clone marlonrichert/zsh-autocomplete \
+    && znap clone zsh-users/zsh-autosuggestions \
+    && znap clone zsh-users/zsh-syntax-highlighting'
 
-# Configure zsh with enhanced settings
-RUN echo '' > /home/${USERNAME}/.zshrc \
-    && echo 'export ZSH=~/.oh-my-zsh' >> /home/${USERNAME}/.zshrc \
-    && echo 'ZSH_THEME="robbyrussell"' >> /home/${USERNAME}/.zshrc \
-    && echo 'ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#999999"' >> /home/${USERNAME}/.zshrc \
-    && echo 'ZSH_AUTOSUGGEST_STRATEGY=(history completion)' >> /home/${USERNAME}/.zshrc \
-    && echo 'plugins=(git docker composer zsh-syntax-highlighting zsh-autosuggestions zsh-completions)' >> /home/${USERNAME}/.zshrc \
-    && echo 'source $ZSH/oh-my-zsh.sh' >> /home/${USERNAME}/.zshrc \
-    && echo 'autoload -U compinit && compinit' >> /home/${USERNAME}/.zshrc \
-    && echo 'zstyle ":completion:*" matcher-list "m:{a-zA-Z}={A-Za-z}"' >> /home/${USERNAME}/.zshrc \
-    && echo 'setopt HIST_IGNORE_DUPS' >> /home/${USERNAME}/.zshrc \
-    && echo 'setopt HIST_IGNORE_SPACE' >> /home/${USERNAME}/.zshrc \
-    && echo 'setopt HIST_REDUCE_BLANKS' >> /home/${USERNAME}/.zshrc \
-    && echo 'setopt AUTO_CD' >> /home/${USERNAME}/.zshrc \
-    # Add nvm configuration
-    && echo 'export NVM_DIR="$HOME/.nvm"' >> /home/${USERNAME}/.zshrc \
-    && echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> /home/${USERNAME}/.zshrc \
-    && echo '[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"' >> /home/${USERNAME}/.zshrc \
-    && chown ${USERNAME}:${USERNAME} /home/${USERNAME}/.zshrc
+# Install mise
+RUN su ${USERNAME} -c 'curl https://mise.run | sh'
+ENV PATH="/home/${USERNAME}/.local/bin:${PATH}"
+ENV MISE_TRUSTED_CONFIG_PATHS="/workspace"
 
-RUN mkdir -p /workspace;chown -R ${USERNAME}:${USERNAME} /workspace
+# Install usage CLI for better mise completions
+RUN su ${USERNAME} -c 'mise use -g usage@latest'
+
+# Copy custom configuration files
+COPY --chown=${USERNAME}:${USERNAME} config/.zshrc /home/${USERNAME}/.zshrc
+COPY --chown=${USERNAME}:${USERNAME} config/.zshrc.alias /home/${USERNAME}/.zshrc.alias
+COPY --chown=${USERNAME}:${USERNAME} config/.zshrc.history /home/${USERNAME}/.zshrc.history
+COPY --chown=${USERNAME}:${USERNAME} config/.zshrc.znap /home/${USERNAME}/.zshrc.znap
+COPY --chown=${USERNAME}:${USERNAME} config/starship.toml /home/${USERNAME}/.config/starship.toml
+COPY --chown=${USERNAME}:${USERNAME} config/.vimrc /home/${USERNAME}/.vimrc
+
+# Set environment variables
+ENV SHELL=/bin/zsh
+
 WORKDIR /workspace

@@ -1,0 +1,26 @@
+# Initialize Znap
+source ~/.zsh-snap/znap.zsh
+
+# Completion settings
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
+
+# zsh-autocomplete settings
+zstyle ':autocomplete:*' min-delay 0.3
+zstyle ':autocomplete:*' min-input 2
+zstyle ':autocomplete:*' max-lines 10
+zstyle ':autocomplete:*' insert-unambiguous true
+
+# zsh-autosuggestions settings
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=240'
+ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+
+# zsh-syntax-highlighting settings
+ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern cursor)
+
+# Load plugins with Znap
+znap source marlonrichert/zsh-autocomplete
+znap source zsh-users/zsh-autosuggestions
+znap source zsh-users/zsh-syntax-highlighting
+
+# Keybindings for zsh-autosuggestions
+bindkey '^ ' autosuggest-accept
