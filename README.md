@@ -59,5 +59,5 @@ A development Docker image based on PHP CLI, optimized for command-line PHP appl
 ### Pull from GitHub Container Registry
 
 ```sh
-docker pull ghcr.io/horatjp/php-cli:8.4
+docker pull ghcr.io/horatjp/php-cli:8.5
 ```
