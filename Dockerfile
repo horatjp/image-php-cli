@@ -99,8 +99,8 @@ RUN rm -f /usr/share/applications/chromium.desktop
 RUN su ${USERNAME} -c 'curl -sS https://starship.rs/install.sh | sh -s -- --yes'
 
 # Install Znap (Zsh plugin manager) and pre-install plugins
-RUN su -s /bin/zsh ${USERNAME} -c 'git clone --depth=1 https://github.com/marlonrichert/zsh-snap.git /home/${USERNAME}/.zsh-snap \
-    && source /home/${USERNAME}/.zsh-snap/znap.zsh \
+RUN su -s /bin/zsh ${USERNAME} -c 'git clone --depth=1 https://github.com/marlonrichert/zsh-snap.git /home/${USERNAME}/.znap/zsh-snap \
+    && source /home/${USERNAME}/.znap/zsh-snap/znap.zsh \
     && znap clone marlonrichert/zsh-autocomplete \
     && znap clone zsh-users/zsh-autosuggestions \
     && znap clone zsh-users/zsh-syntax-highlighting'
@@ -115,9 +115,6 @@ RUN su ${USERNAME} -c 'mise use -g usage@latest'
 
 # Copy custom configuration files
 COPY --chown=${USERNAME}:${USERNAME} config/.zshrc /home/${USERNAME}/.zshrc
-COPY --chown=${USERNAME}:${USERNAME} config/.zshrc.alias /home/${USERNAME}/.zshrc.alias
-COPY --chown=${USERNAME}:${USERNAME} config/.zshrc.history /home/${USERNAME}/.zshrc.history
-COPY --chown=${USERNAME}:${USERNAME} config/.zshrc.znap /home/${USERNAME}/.zshrc.znap
 COPY --chown=${USERNAME}:${USERNAME} config/starship.toml /home/${USERNAME}/.config/starship.toml
 COPY --chown=${USERNAME}:${USERNAME} config/.vimrc /home/${USERNAME}/.vimrc
 
