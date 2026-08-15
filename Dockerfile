@@ -19,6 +19,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     jq \
     less \
     locales \
+    lsof \
     libfreetype-dev \
     libjpeg62-turbo-dev \
     libkrb5-dev \
@@ -33,6 +34,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     mariadb-client \
     openssh-client \
     postgresql-client \
+    procps \
     rsync \
     sqlite3 \
     supervisor \
@@ -44,19 +46,22 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     zip \
     zsh \
     # Additional tools for development
-    tmux \
-    ripgrep \
-    fd-find \
     bat \
+    btop \
     eza \
+    fd-find \
     fzf \
     gh \
-    lazygit \
     git-delta \
-    btop \
+    lazygit \
+    ripgrep \
+    tmux \
+    # bat / fd are installed as batcat / fdfind on Debian
+    && ln -s /usr/bin/batcat /usr/local/bin/bat \
+    && ln -s /usr/bin/fdfind /usr/local/bin/fd \
     # user
     && groupadd --gid ${USER_GID} ${USERNAME} \
-    && useradd -s /bin/bash --uid ${USER_UID} --gid ${USER_GID} -m ${USERNAME} \
+    && useradd -s /bin/zsh --uid ${USER_UID} --gid ${USER_GID} -m ${USERNAME} \
     && apt-get install -y sudo \
     && echo ${USERNAME} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${USERNAME} \
     && chmod 0440 /etc/sudoers.d/${USERNAME} \
